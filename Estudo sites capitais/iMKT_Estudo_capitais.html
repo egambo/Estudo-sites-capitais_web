@@ -1,0 +1,1441 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iMKT | Sites das Capitais do Brasil</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #1e3a5f;
+            --secondary: #2d5a87;
+            --accent: #4a90d9;
+            --light: #f5f7fa;
+            --dark: #1a1a2e;
+            --border: #e0e6ed;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--light);
+            color: var(--dark);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .sidebar {
+            width: 280px;
+            min-width: 180px;
+            max-width: 500px;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 4px 0 12px rgba(0, 0, 0, 0.15);
+            z-index: 10;
+        }
+
+        .resize-handle {
+            width: 6px;
+            cursor: col-resize;
+            background: transparent;
+            transition: background 0.2s;
+            flex-shrink: 0;
+        }
+
+        .resize-handle:hover,
+        .resize-handle.dragging {
+            background: var(--accent);
+        }
+
+        .resize-handle-v {
+            height: 6px;
+            cursor: row-resize;
+            background: transparent;
+            transition: background 0.2s;
+        }
+
+        .resize-handle-v:hover,
+        .resize-handle-v.dragging {
+            background: var(--accent);
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 12px;
+        }
+
+        .sidebar-header .logo {
+            width: 80px;
+            height: auto;
+        }
+
+        .sidebar-header h1 {
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+            color: white;
+        }
+
+        .sidebar-header p {
+            font-size: 11px;
+            opacity: 0.7;
+            line-height: 1.4;
+        }
+
+        .search-box {
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 14px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 14px;
+            outline: none;
+            transition: background 0.2s;
+        }
+
+        .search-box input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .search-box input:focus {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .capitals-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 0;
+        }
+
+        .report-btn {
+            margin: 12px 16px;
+            padding: 12px 16px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            color: white;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .report-btn:hover {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+            transform: translateY(-1px);
+        }
+
+        .report-btn svg {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+        }
+
+        .report-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .report-modal.active {
+            display: flex;
+        }
+
+        .report-content {
+            background: white;
+            border-radius: 16px;
+            max-width: 800px;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 32px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .report-content h1 {
+            font-size: 24px;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .report-content h2 {
+            font-size: 16px;
+            color: var(--secondary);
+            margin-bottom: 24px;
+            font-weight: 500;
+        }
+
+        .report-content h3 {
+            font-size: 14px;
+            color: var(--primary);
+            margin: 20px 0 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .report-content p {
+            font-size: 14px;
+            line-height: 1.7;
+            color: #4a4a5a;
+            margin-bottom: 12px;
+        }
+
+        .report-content ul {
+            margin: 12px 0;
+            padding-left: 20px;
+        }
+
+        .report-content li {
+            font-size: 13px;
+            line-height: 1.6;
+            color: #5a5a6e;
+            margin-bottom: 8px;
+        }
+
+        .report-content hr {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 24px 0;
+        }
+
+        .report-content .highlight {
+            background: linear-gradient(120deg, #e8f4fd, #f0f9ff);
+            padding: 16px;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent);
+            margin: 16px 0;
+        }
+
+        .report-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #888;
+            padding: 4px;
+            line-height: 1;
+        }
+
+        .report-close:hover {
+            color: var(--dark);
+        }
+
+        .report-content {
+            position: relative;
+        }
+
+        .capitals-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .capitals-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .capitals-list::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+
+        .capital-item {
+            padding: 14px 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .capital-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .capital-item.active {
+            background: rgba(255, 255, 255, 0.12);
+            border-left-color: var(--accent);
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .screenshot-panel {
+            flex: 1;
+            min-width: 400px;
+            display: flex;
+            flex-direction: column;
+            background: #e8eaed;
+            position: relative;
+        }
+
+        .panel-header {
+            padding: 12px 24px;
+            background: white;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .panel-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex: 1;
+        }
+
+        .search-box-header {
+            display: flex;
+            align-items: center;
+            background: #fff;
+            border: 1px solid #dfe1e5;
+            border-radius: 24px;
+            padding: 8px 16px;
+            gap: 12px;
+            flex: 1;
+            max-width: 500px;
+            box-shadow: 0 1px 6px rgba(32, 33, 36, 0.08);
+        }
+
+        .search-box-header:hover {
+            box-shadow: 0 1px 6px rgba(32, 33, 36, 0.15);
+        }
+
+        .search-box-header svg {
+            width: 20px;
+            height: 20px;
+            fill: #9aa0a6;
+            flex-shrink: 0;
+        }
+
+        .search-box-header .title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--primary);
+            white-space: nowrap;
+        }
+
+        .search-box-header .url {
+            font-size: 13px;
+            color: var(--accent);
+            text-decoration: none;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 300px;
+        }
+
+        .search-box-header .url:hover {
+            text-decoration: underline;
+        }
+
+        .dimensions {
+            font-size: 12px;
+            color: #70757a;
+            white-space: nowrap;
+        }
+
+        .screenshot-container {
+            flex: 1;
+            overflow: auto;
+            padding: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .screenshot-wrapper {
+            background: white;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            border-radius: 8px;
+            overflow: visible;
+            max-width: 100%;
+        }
+
+        .screenshot-wrapper img {
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+
+        .screenshot-wrapper img {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            width: auto;
+        }
+
+        .info-panel {
+            width: 400px;
+            min-width: 280px;
+            max-width: 600px;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .info-header {
+            padding: 24px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+
+        .info-header h2 {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .info-header span {
+            font-size: 13px;
+            opacity: 0.8;
+        }
+
+        .info-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+        }
+
+        .info-section {
+            margin-bottom: 28px;
+        }
+
+        .info-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .section-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--accent);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-label::before {
+            content: '';
+            width: 4px;
+            height: 16px;
+            background: var(--accent);
+            border-radius: 2px;
+        }
+
+        .info-text {
+            font-size: 14px;
+            line-height: 1.7;
+            color: #4a4a5a;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .stat-card {
+            background: var(--light);
+            border-radius: 10px;
+            padding: 16px;
+            text-align: center;
+            border: 1px solid var(--border);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-card.servicos .stat-value {
+            color: #2ecc71;
+        }
+
+        .stat-card.noticias .stat-value {
+            color: #3498db;
+        }
+
+        .stat-card.redes .stat-value {
+            color: #9b59b6;
+        }
+
+        .stat-card.outros .stat-value {
+            color: #f39c12;
+        }
+
+        .analise-box {
+            background: linear-gradient(135deg, #f8f9fa, #fff);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .analise-box h4 {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .analise-box h4::before {
+            content: '📱';
+        }
+
+        .analise-text {
+            font-size: 13px;
+            line-height: 1.8;
+            color: #5a5a6e;
+        }
+
+        .keyboard-hint {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 12px;
+            display: flex;
+            gap: 16px;
+            z-index: 100;
+        }
+
+        .keyboard-hint kbd {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: inherit;
+            margin-right: 4px;
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #999;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state .empty-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .empty-state .empty-subtitle {
+            font-size: 14px;
+            color: #888;
+        }
+
+        .report-view {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            width: 100%;
+            margin: 0 auto;
+            overflow: hidden;
+        }
+
+        .report-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            background: var(--light);
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--primary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .back-btn:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .back-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .report-inner {
+            padding: 32px;
+            max-height: calc(100vh - 200px);
+            overflow-y: auto;
+        }
+
+        .report-inner h1 {
+            font-size: 22px;
+            color: var(--primary);
+            margin-bottom: 8px;
+            line-height: 1.3;
+        }
+
+        .report-inner h2 {
+            font-size: 15px;
+            color: var(--secondary);
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .report-inner h3 {
+            font-size: 14px;
+            color: var(--primary);
+            margin: 24px 0 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .report-inner p {
+            font-size: 14px;
+            line-height: 1.7;
+            color: #4a4a5a;
+            margin-bottom: 12px;
+        }
+
+        .report-inner ul {
+            margin: 12px 0;
+            padding-left: 20px;
+        }
+
+        .report-inner li {
+            font-size: 13px;
+            line-height: 1.6;
+            color: #5a5a6e;
+            margin-bottom: 8px;
+        }
+
+        .report-inner hr {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 24px 0;
+        }
+
+        .report-inner .highlight {
+            background: linear-gradient(120deg, #e8f4fd, #f0f9ff);
+            padding: 16px;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent);
+            margin: 16px 0;
+        }
+
+        @media (max-width: 1200px) {
+            .info-panel {
+                width: 350px;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .info-panel {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <img src="imkt_logo.png" alt="IMKT" class="logo">
+                <h1>Sites Capitais do Brasil</h1>
+                <p>Análise dos Sites Governamentais</p>
+            </div>
+            <div class="search-box">
+                <input type="text" id="search" placeholder="Buscar capital...">
+            </div>
+            <button class="report-btn" id="reportBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+                Leia o Relatório Comparativo dos sites
+            </button>
+            <div class="capitals-list" id="capitalsList"></div>
+        </aside>
+        <div class="resize-handle" id="resizeHandle1"></div>
+
+        <main class="main-content">
+            <div class="screenshot-panel" id="screenshotPanel">
+                <div class="panel-header">
+                    <div class="search-box-header">
+                        <svg viewBox="0 0 24 24">
+                            <path
+                                d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                        </svg>
+                        <span class="title" id="screenshotTitle">Selecione uma capital</span>
+                        <a href="#" target="_blank" id="siteUrl" class="url"></a>
+                    </div>
+                    <span class="dimensions" id="imageDimensions"></span>
+                </div>
+                <div class="screenshot-container" id="screenshotContainer" tabindex="0">
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <rect x="3" y="3" width="18" height="18" rx="2" />
+                            <circle cx="8.5" cy="8.5" r="1.5" />
+                            <path d="M21 15l-5-5L5 21" />
+                        </svg>
+                        <p class="empty-title">Bem-vindo ao Estudo de sites das capitais do Brasil</p>
+                        <p class="empty-subtitle">selecione uma capital ao lado</p>
+                    </div>
+                </div>
+            </div>
+            <div class="resize-handle" id="resizeHandle2"></div>
+
+            <div class="info-panel" id="infoPanel">
+                <div class="info-header">
+                    <h2 id="infoCapital">--</h2>
+                    <span>Dados da Análise</span>
+                </div>
+                <div class="info-content" id="infoContent">
+                    <div class="empty-state">
+                        <p>Selecione uma capital para ver os detalhes</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const sitesData = {
+            "Rio Branco": "https://www.riobranco.ac.gov.br/",
+            "Maceió": "https://maceio.al.gov.br/",
+            "Macapá": "https://macapa.ap.gov.br/",
+            "Manaus": "https://manaus.am.gov.br/",
+            "Salvador": "https://salvador.ba.gov.br/",
+            "Fortaleza": "https://fortaleza.ce.gov.br/",
+            "Brasília": "https://www.df.gov.br/",
+            "Vitória": "https://vitoria.es.gov.br/",
+            "Goiânia": "https://goiania.go.gov.br/",
+            "São Luís": "https://saoluis.ma.gov.br/",
+            "Cuiabá": "https://cuiaba.mt.gov.br/",
+            "Campo Grande": "https://www.campogrande.ms.gov.br/",
+            "Belo Horizonte": "https://prefeitura.pbh.gov.br/",
+            "Belém": "https://belem.pa.gov.br/",
+            "João Pessoa": "https://joaopessoa.pb.gov.br/",
+            "Curitiba": "https://www.curitiba.pr.gov.br/",
+            "Recife": "https://recife.pe.gov.br/",
+            "Teresina": "https://teresina.pi.gov.br/",
+            "Rio de Janeiro": "https://prefeitura.rio/",
+            "Natal": "https://natal.rn.gov.br/",
+            "Porto Alegre": "https://prefeitura.poa.br/",
+            "Porto Velho": "https://www.portovelho.ro.gov.br/",
+            "Boa Vista": "https://boavista.rr.gov.br/",
+            "Florianópolis": "https://www.pmf.sc.gov.br/",
+            "São Paulo": "https://www.capital.sp.gov.br/",
+            "Aracaju": "https://aracaju.se.gov.br/",
+            "Palmas": "https://palmas.to.gov.br/"
+        };
+
+        const capitalsData = [
+            {
+                "capital": "Aracaju",
+                "primeira_tela": "Dominada por um grande banner carrossel de destaques jornalísticos e de campanhas. A prioridade visual é informativa e de notícias diárias.",
+                "servicos_pct": "30%",
+                "noticias_pct": "40%",
+                "redes_sociais_pct": "5%",
+                "outros_pct": "25%",
+                "analise_redes": "As redes sociais aparecem apenas em formato de ícones no cabeçalho e rodapé, ocupando uma área mínima e sem feeds embutidos."
+            },
+            {
+                "capital": "Belo Horizonte",
+                "primeira_tela": "Forte presença de campanhas institucionais e um bloco de acesso rápido a serviços logo abaixo do banner. Foco dividido entre branding da gestão e facilidade de serviços.",
+                "servicos_pct": "50%",
+                "noticias_pct": "30%",
+                "redes_sociais_pct": "2%",
+                "outros_pct": "18%",
+                "analise_redes": "Ocupam espaço ínfimo, limitadas rigorosamente a pequenos ícones flat no rodapé da página. Zero uso de embeds."
+            },
+            {
+                "capital": "Belém",
+                "primeira_tela": "Apresenta um grande banner de campanhas e um menu visual de autoatendimento 'COMO PODEMOS AJUDAR?'. O foco imediato é puramente o cidadão e a oferta de serviços.",
+                "servicos_pct": "60%",
+                "noticias_pct": "10%",
+                "redes_sociais_pct": "5%",
+                "outros_pct": "25%",
+                "analise_redes": "Apenas ícones para perfis sociais presentes no rodapé, acompanhados de contatos tradicionais (telefone, e-mail)."
+            },
+            {
+                "capital": "Boa Vista",
+                "primeira_tela": "Dominada por uma fotografia panorâmica larga da cidade acoplada a uma manchete jornalística de impacto. Foco total em reportagem e ações territoriais.",
+                "servicos_pct": "30%",
+                "noticias_pct": "40%",
+                "redes_sociais_pct": "15%",
+                "outros_pct": "15%",
+                "analise_redes": "Presença muito considerável devido a um widget gigante embarcado em formato mobile da 'Prefeitura no YouTube', que domina uma faixa inteira vertical-horizontal do meio para o fim da tela, além dos ícones clássicos."
+            },
+            {
+                "capital": "Brasília",
+                "primeira_tela": "Composição limpa com um amplo campo de busca central, tipo Google, para priorizar que o usuário pesquise sua necessidade, além de grandes banners carrossel.",
+                "servicos_pct": "30%",
+                "noticias_pct": "30%",
+                "redes_sociais_pct": "5%",
+                "outros_pct": "35%",
+                "analise_redes": "Apresenta ícones arredondados bem visíveis no cabeçalho superior e rodapé inferior, porém mantendo-se restritos a links e sem timeline embutida."
+            },
+            {
+                "capital": "Campo Grande",
+                "primeira_tela": "Foco absurdo na conversão de serviços: grande barra de busca central e painéis dedicados inteiramente aos itens 'Mais Acessados' por perfis com banner de IPTU.",
+                "servicos_pct": "45%",
+                "noticias_pct": "25%",
+                "redes_sociais_pct": "2%",
+                "outros_pct": "28%",
+                "analise_redes": "Reduzida ao último quadrante do rodapé da tela, utilizando minúsculos atalhos de ícone."
+            },
+            {
+                "capital": "Cuiabá",
+                "primeira_tela": "Mescla banner largo focado em campanhas/serviços e em seguida duas fotos lado-a-lado noticiosas sobre inaugurações.",
+                "servicos_pct": "45%",
+                "noticias_pct": "30%",
+                "redes_sociais_pct": "3%",
+                "outros_pct": "22%",
+                "analise_redes": "Links básicos no canto direito do setor escuro do rodapé. Totalmente isolada em formato botão/ícone."
+            },
+            {
+                "capital": "Curitiba",
+                "primeira_tela": "Campo de busca textual grande sob um banner panorâmico, seguido de uma intrigante seção 'Stories' inspirada em redes sociais. Foco mesclado em autoatendimento e navegação visual rápida.",
+                "servicos_pct": "35%",
+                "noticias_pct": "45%",
+                "redes_sociais_pct": "5%",
+                "outros_pct": "15%",
+                "analise_redes": "O site mimetiza a experiência interativa de redes (com ícones 'Stories') para notícias próprias, mas as redes sociais oficiais em si figuram apenas em pequenos links de atalho no rodapé."
+            },
+            {
+                "capital": "Florianópolis",
+                "primeira_tela": "Dita um imediatismo de serviço e autoatendimento total, apresentando um mega bloco azul sobreposto em foto de praia, com um enorme campo central de busca e botões velozes abaixo.",
+                "servicos_pct": "65%",
+                "noticias_pct": "15%",
+                "redes_sociais_pct": "15%",
+                "outros_pct": "5%",
+                "analise_redes": "Alto nível de integração na parte inferior do site. Enorme bloco dividindo um feed gigante de postagens do Facebook e num quadrante vizinho, uma espessa galeria mosaico do feed do Instagram da Prefeitura embarcados na root homepage."
+            },
+            {
+                "capital": "Fortaleza",
+                "primeira_tela": "Layout espaçado centralizando no termo 'Fortaleza Digital', possuindo um vasto banner de ações e três atalhos grandes. Transmite prioridade inicial dividida entre vitrine publicitária e ferramentas como IPTU.",
+                "servicos_pct": "25%",
+                "noticias_pct": "50%",
+                "redes_sociais_pct": "5%",
+                "outros_pct": "20%",
+                "analise_redes": "Contidas exclusivamente no bloco decorativo final, como botões circulares vazados padrão. Não existem feeds interligados ou prévias das redes em si no desenho da página."
+            },
+            {
+                "capital": "Goiânia",
+                "primeira_tela": "Mescla um banner agressivo de campanha (amarelo total) com uma sólida construção estilo Dashboard logo abaixo: um denso bloco central de canais por perfil de cidadão ao lado de uma pauta fixa noticiosa.",
+                "servicos_pct": "40%",
+                "noticias_pct": "35%",
+                "redes_sociais_pct": "5%",
+                "outros_pct": "20%",
+                "analise_redes": "Designados atalhos diretos inseridos de forma sutil entre o menu de busca global superior e repetido textualmente/iconograficamente na coluna de contatos do grid de rodapé de encerramento."
+            },
+            {
+                "capital": "João Pessoa",
+                "primeira_tela": "Cabeçalho com opções estritas de acessibilidade governamental. Logo exibe particição matemática rígida na diagramação em 3 colunas laterais contendo serviços utilitários em lista na esquerda e manchete no meio.",
+                "servicos_pct": "45%",
+                "noticias_pct": "20%",
+                "redes_sociais_pct": "5%",
+                "outros_pct": "30%",
+                "analise_redes": "Concentrada minimamente na seção 'Atendimento / Telefones Úteis' na forma de ícones arredondados bem espaçados, sem atração gravitacional no conteúdo da página e 0 embeds."
+            },
+            {
+                "capital": "Macapá",
+                "primeira_tela": "Apresentação cirurgicamente focada no utilitarismo, lembrando página inicial de busca padrão web: barra isolada de digitação e uma rígida malha em grade branca de dezenas de botões de documentos, certidões e alvarás disponíveis.",
+                "servicos_pct": "70%",
+                "noticias_pct": "15%",
+                "redes_sociais_pct": "2%",
+                "outros_pct": "13%",
+                "analise_redes": "Marginal, os rastros restam relegados no extremo escuro debaixo sendo as opções tradicionais de atalho na extremidade direita do pé da tela. Nenhuma integração ou chamada de feeds nas áreas de destaque da prefeitura."
+            },
+            {
+                "capital": "Maceió",
+                "primeira_tela": "Visão imediata calcada no jornalismo através de grandes feeds fotográficos descritivos, sob um cabeçalho e menu compactados de cores vivas e utilitarismo em segunda prioridade.",
+                "servicos_pct": "30%",
+                "noticias_pct": "40%",
+                "redes_sociais_pct": "10%",
+                "outros_pct": "20%",
+                "analise_redes": "Promete incorporação robusta no corpo intermediário da tela por espaços nativos bloqueados para Instagram, além das repetitividades icônicas universais pelo leiaute global."
+            },
+            {
+                "capital": "Manaus",
+                "primeira_tela": "Explosão empática de prestação de serviços com destaque inicial 100% ocupado por um grid flutuante amarelo e verde que entrega serviços mais acessados ao morador, ilustrado pela foto humana apontando direção.",
+                "servicos_pct": "50%",
+                "noticias_pct": "30%",
+                "redes_sociais_pct": "5%",
+                "outros_pct": "15%",
+                "analise_redes": "Sem imersão de conteúdo social dentro da home, servindo as redes em longos trilhos retangulares desenhados unicamente para listagem maciça dos ícones institucionais destas presenças globais."
+            },
+            {
+                "capital": "Natal",
+                "primeira_tela": "Painel de exibição contrastante, dedicando metade frontal do monitor para fotorreportagens dinâmicas governamentais encostada junto à coluna permanente grossa de atalhos e utilidades à direita da navegação.",
+                "servicos_pct": "40%",
+                "noticias_pct": "35%",
+                "redes_sociais_pct": "2%",
+                "outros_pct": "23%",
+                "analise_redes": "Quase totalmente silenciadas dentro da arquitetura central de visualização. Presença resumida aos microscópicos atalhos vetoriais comprimidos na barra do navegador do sistema."
+            },
+            {
+                "capital": "Palmas",
+                "primeira_tela": "Mescla navegação descritiva (coluna fixada à esquerda com texto estendido sem botões) encapando lado-a-lado banners de marketing em loop denso focando noticiários da gestão.",
+                "servicos_pct": "25%",
+                "noticias_pct": "30%",
+                "redes_sociais_pct": "3%",
+                "outros_pct": "42%",
+                "analise_redes": "Omitidas do arranjo interativo principal, preenchem meramente obrigações estéticas em pequenos vetores azuis minimalistas postos estrategicamente no vácuo dos menus ou profundidade do encerramento."
+            },
+            {
+                "capital": "Porto Alegre",
+                "primeira_tela": "Dita requinte por um chamativo degradê no topo e logo submerge a pessoa em um enorme agrupamento cor-de-mostarda hiperfocado em utilidade com dezenas de botões redondos de ação auto-explicativa.",
+                "servicos_pct": "45%",
+                "noticias_pct": "25%",
+                "redes_sociais_pct": "5%",
+                "outros_pct": "25%",
+                "analise_redes": "Estruturalmente isoladas em uma zona calma pós-noticiário e pré-rodapé da prefeitura, exibindo somente a indicação estética para os perfis exógenos sem visualização na web app."
+            },
+            {
+                "capital": "Porto Velho",
+                "primeira_tela": "Extrema modéstia, aparência retrô focada em blocos puros jornalísticos. Após a barra de destaque de cima atira o visitante num listão de índice telefônico em texto puro que estende navegação.",
+                "servicos_pct": "45%",
+                "noticias_pct": "20%",
+                "redes_sociais_pct": "2%",
+                "outros_pct": "33%",
+                "analise_redes": "Totalmente renegadas ao fim absoluto da navegação da longa Home, contendo um par tímido de glifos monocromáticos. Inexiste qualquer chamativo orgânico com as publicações da gestão ali fora."
+            },
+            {
+                "capital": "Recife",
+                "primeira_tela": "Exibe classicismo pelo uso rígido da paleta institucional azul e amarela, começando puramente de noticiário grandioso sobre banners e abrigando suas rotinas em discreta iluminação estática no ombro direito da primeira tela.",
+                "servicos_pct": "30%",
+                "noticias_pct": "40%",
+                "redes_sociais_pct": "13%",
+                "outros_pct": "17%",
+                "analise_redes": "Forte uso por integração embutida; destina expressivamente grandes e coloridos mosaicos fixos trazendo as janelas do Facebook Live e feed orgânico diretamente pra aprofundar experiência retentiva em solo governamental."
+            },
+            {
+                "capital": "Rio Branco",
+                "primeira_tela": "Impacto imersivo com megabanner arquitetônico englobando atalhos circulares em sua base. Apresenta o utilitarismo escorado visualmente ao peso da obra pública.",
+                "servicos_pct": "30%",
+                "noticias_pct": "45%",
+                "redes_sociais_pct": "2%",
+                "outros_pct": "23%",
+                "analise_redes": "Esconde totalmente sua frente digital social perante uma maciça exibição noticiosa jornalística nativa do próprio ecossistema do site."
+            },
+            {
+                "capital": "Rio de Janeiro",
+                "primeira_tela": "Arquitetura da Informação hiper-orientada à conversão e utilidade sob um imenso painel claro recheado com uma malha de atalhos textuais englobando quase tudo do município.",
+                "servicos_pct": "50%",
+                "noticias_pct": "25%",
+                "redes_sociais_pct": "10%",
+                "outros_pct": "15%",
+                "analise_redes": "Embora detenha blocos titânicos nominando as grandes redes na base, atua de forma estritamente referencial via linkagem externa sem integração visual contemporânea interativa."
+            },
+            {
+                "capital": "Salvador",
+                "primeira_tela": "Clima de manual organizacional dominado por uma matriz gigantesca de logomarcas secretariais abaixo de banners rotineiros, sufocando serviços diretos.",
+                "servicos_pct": "20%",
+                "noticias_pct": "35%",
+                "redes_sociais_pct": "15%",
+                "outros_pct": "30%",
+                "analise_redes": "Ousadia na apresentação macroscópica em um eixo inteiro do site com logotipos vibrantes imensos promovendo a conversão pro TikTok e fluxos conversacionais (WhatsApp) ao invés do clássico Facebook."
+            },
+            {
+                "capital": "São Luís",
+                "primeira_tela": "Exibe paisagismo no topo mas ataca avidamente a dobra primária com galerias pesadas exclusivas para telejornalismo antes de entregar a caixa rígida de ferramentas de acesso rápido.",
+                "servicos_pct": "35%",
+                "noticias_pct": "40%",
+                "redes_sociais_pct": "2%",
+                "outros_pct": "23%",
+                "analise_redes": "Nulificação de exposição social externa optando em aplicar esforço tecnológico pra abrigar pesadamente um player dinâmico de vídeos institucionais imitando comportamento de feed no terço inferior."
+            },
+            {
+                "capital": "São Paulo",
+                "primeira_tela": "Comportamento dinâmico super premium misturando apelo publicitário da gestão flanqueado por colunas contendo atalhos modernosos flutuantes e botões polidos de auto-serviço.",
+                "servicos_pct": "40%",
+                "noticias_pct": "30%",
+                "redes_sociais_pct": "5%",
+                "outros_pct": "25%",
+                "analise_redes": "Obedece estética corporativa severa. Repetidos contornos cor-de-laranja espalhados no rodapé funcionam como mero adorno sinalizador sem sequestrar relevância ao forte hub interativo de serviços nativos."
+            },
+            {
+                "capital": "Teresina",
+                "primeira_tela": "Invasão utilitária espremida numa estante lateral direita competindo em largura com slideshows dramáticos, desenrolando para um paredão infinito de minúsculos botões de diretórios governamentais.",
+                "servicos_pct": "55%",
+                "noticias_pct": "10%",
+                "redes_sociais_pct": "2%",
+                "outros_pct": "33%",
+                "analise_redes": "Minimalismo irrelevante imposto às redes na roda final do site perante as dezenas de painéis burocráticos textuais brancos pesados exibidos em prioridade."
+            },
+            {
+                "capital": "Vitória",
+                "primeira_tela": "Poder fotográfico acinzentado servindo de plano de fundo pra caixa forte da Busca e logo descendo pra áreas brancas repletas de confortáveis cápsulas azuladas delineadas servindo acesso rápido ao município.",
+                "servicos_pct": "45%",
+                "noticias_pct": "35%",
+                "redes_sociais_pct": "5%",
+                "outros_pct": "15%",
+                "analise_redes": "Segrega os ícones no pé da página institucional em formatos padronizados do consórcio tradicional da web pública sem qualquer iniciativa de widget cross-plataforma inteligente."
+            }
+        ];
+
+        let currentIndex = -1;
+        let filteredCapitals = [...capitalsData];
+
+        const capitalsList = document.getElementById('capitalsList');
+        const searchInput = document.getElementById('search');
+        const screenshotContainer = document.getElementById('screenshotContainer');
+        const screenshotTitle = document.getElementById('screenshotTitle');
+        const imageDimensions = document.getElementById('imageDimensions');
+        const infoCapital = document.getElementById('infoCapital');
+        const infoContent = document.getElementById('infoContent');
+
+        function normalizeCapitalName(name) {
+            return name
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .toLowerCase()
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        function getImageFileName(capital) {
+            const normalized = normalizeCapitalName(capital);
+            const mappings = {
+                'rio branco': 'Rio Branco',
+                'maceio': 'Maceió',
+                'macapa': 'Macapá',
+                'manaus': 'Manaus',
+                'salvador': 'Salvador',
+                'fortaleza': 'Fortaleza',
+                'brasilia': 'Brasília',
+                'vitoria': 'Vitória',
+                'goiania': 'Goiânia',
+                'sao luis': 'São Luís',
+                'cuiaba': 'Cuiabá',
+                'campo grande': 'Campo Grande',
+                'belo horizonte': 'Belo Horizonte',
+                'belem': 'Belém',
+                'joao pessoa': 'João Pessoa',
+                'curitiba': 'Curitiba',
+                'recife': 'Recife',
+                'teresina': 'Teresina',
+                'rio de janeiro': 'Rio de Janeiro',
+                'natal': 'Natal',
+                'porto alegre': 'Porto Alegre',
+                'porto velho': 'Porto Velho',
+                'boa vista': 'Boa Vista',
+                'florianopolis': 'Florianópolis',
+                'sao paulo': 'São Paulo',
+                'aracaju': 'Aracaju',
+                'palmas': 'Palmas'
+            };
+            return mappings[normalized] || capital;
+        }
+
+        function renderCapitalsList() {
+            capitalsList.innerHTML = '';
+            filteredCapitals.forEach((capital, index) => {
+                const div = document.createElement('div');
+                div.className = 'capital-item';
+                div.textContent = capital.capital;
+                div.addEventListener('click', () => selectCapital(index));
+                capitalsList.appendChild(div);
+            });
+        }
+
+        function selectCapital(index) {
+            const actualIndex = filteredCapitals[index]
+                ? index
+                : capitalsData.findIndex(c => c.capital === filteredCapitals[index]?.capital);
+
+            currentIndex = actualIndex;
+            const capital = capitalsData[currentIndex];
+
+            document.querySelectorAll('.capital-item').forEach((el, i) => {
+                el.classList.toggle('active', filteredCapitals[index] ? i === index : false);
+            });
+
+            if (!capital) return;
+
+            screenshotTitle.textContent = capital.capital;
+            infoCapital.textContent = capital.capital;
+
+            const siteUrl = document.getElementById('siteUrl');
+            const site = sitesData[capital.capital];
+            if (site) {
+                siteUrl.href = site;
+                siteUrl.textContent = site;
+                siteUrl.style.display = 'inline';
+            } else {
+                siteUrl.style.display = 'none';
+            }
+
+            const imageFileName = getImageFileName(capital.capital);
+            const imagePath = `Capturas_Capitais/${imageFileName}.png`;
+
+            screenshotContainer.innerHTML = `
+                <div class="screenshot-wrapper">
+                    <img src="${imagePath}" alt="${capital.capital}" onload="document.getElementById('imageDimensions').textContent = this.naturalWidth + ' x ' + this.naturalHeight + 'px'" onerror="this.parentElement.innerHTML = '<div style=\\'padding: 40px; text-align: center; color: #999;\\'>Imagem não encontrada</div>'">
+                </div>
+            `;
+
+            infoContent.innerHTML = `
+                <div class="info-section">
+                    <div class="section-label">Primeira Tela</div>
+                    <p class="info-text">${capital.primeira_tela}</p>
+                </div>
+
+                <div class="info-section">
+                    <div class="section-label">Distribuição de Conteúdo</div>
+                    <div class="stats-grid">
+                        <div class="stat-card servicos">
+                            <div class="stat-value">${capital.servicos_pct}</div>
+                            <div class="stat-label">Serviços</div>
+                        </div>
+                        <div class="stat-card noticias">
+                            <div class="stat-value">${capital.noticias_pct}</div>
+                            <div class="stat-label">Notícias</div>
+                        </div>
+                        <div class="stat-card redes">
+                            <div class="stat-value">${capital.redes_sociais_pct}</div>
+                            <div class="stat-label">Redes Sociais</div>
+                        </div>
+                        <div class="stat-card outros">
+                            <div class="stat-value">${capital.outros_pct}</div>
+                            <div class="stat-label">Outros</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <div class="section-label">Análise de Redes Sociais</div>
+                    <div class="analise-box">
+                        <h4>Integração nas Redes</h4>
+                        <p class="analise-text">${capital.analise_redes}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            filteredCapitals = capitalsData.filter(c =>
+                c.capital.toLowerCase().includes(query)
+            );
+            currentIndex = -1;
+            renderCapitalsList();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            const activeElement = document.activeElement;
+            const isSearchFocused = activeElement === searchInput;
+            const isScreenshotFocused = activeElement === screenshotContainer || activeElement.closest('.screenshot-container');
+
+            if (e.key === 'ArrowDown') {
+                if (isScreenshotFocused) {
+                    e.preventDefault();
+                    screenshotContainer.scrollTop += 150;
+                } else if (!isSearchFocused) {
+                    e.preventDefault();
+                    if (filteredCapitals.length > 0) {
+                        const nextIndex = currentIndex < filteredCapitals.length - 1 ? currentIndex + 1 : 0;
+                        const actualIndex = capitalsData.findIndex(c => c.capital === filteredCapitals[nextIndex].capital);
+                        currentIndex = actualIndex;
+                        renderCapitalsList();
+                        selectCapital(nextIndex);
+
+                        const element = document.querySelectorAll('.capital-item')[nextIndex];
+                        element?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                    }
+                }
+            } else if (e.key === 'ArrowUp') {
+                if (isScreenshotFocused) {
+                    e.preventDefault();
+                    screenshotContainer.scrollTop -= 150;
+                } else if (!isSearchFocused) {
+                    e.preventDefault();
+                    if (filteredCapitals.length > 0) {
+                        const prevIndex = currentIndex > 0 ? currentIndex - 1 : filteredCapitals.length - 1;
+                        const actualIndex = capitalsData.findIndex(c => c.capital === filteredCapitals[prevIndex].capital);
+                        currentIndex = actualIndex;
+                        renderCapitalsList();
+                        selectCapital(prevIndex);
+
+                        const element = document.querySelectorAll('.capital-item')[prevIndex];
+                        element?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                    }
+                }
+            } else if (e.key === 'Enter') {
+                if (currentIndex >= 0 && !isSearchFocused) {
+                    selectCapital(currentIndex);
+                }
+            } else if (e.key === 'Tab') {
+                setTimeout(() => {
+                    const newActive = document.activeElement;
+                    if (newActive === screenshotContainer || newActive.closest('.screenshot-container')) {
+                        screenshotContainer.tabIndex = 0;
+                        screenshotContainer.focus();
+                    }
+                }, 0);
+            }
+        });
+
+        renderCapitalsList();
+
+        // Resize functionality
+        const resizeHandle1 = document.getElementById('resizeHandle1');
+        const resizeHandle2 = document.getElementById('resizeHandle2');
+        const sidebar = document.getElementById('sidebar');
+        const screenshotPanel = document.getElementById('screenshotPanel');
+        const infoPanel = document.getElementById('infoPanel');
+
+        let isResizing = false;
+        let currentHandle = null;
+        let startX = 0;
+        let startWidth = 0;
+
+        function initResize(handle, element, property, minWidth, maxWidth) {
+            handle.addEventListener('mousedown', (e) => {
+                isResizing = true;
+                currentHandle = { element, property, minWidth, maxWidth };
+                startX = e.clientX;
+                startWidth = parseInt(getComputedStyle(element)[property], 10);
+                handle.classList.add('dragging');
+                document.body.style.cursor = 'col-resize';
+                document.body.style.userSelect = 'none';
+            });
+        }
+
+        initResize(resizeHandle1, sidebar, 'width', 180, 500);
+        initResize(resizeHandle2, infoPanel, 'width', 280, 600);
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizing || !currentHandle) return;
+
+            let delta = e.clientX - startX;
+            // Invert direction for resizeHandle2 (between screenshot and info)
+            if (currentHandle.element === infoPanel) {
+                delta = -delta;
+            }
+
+            let newWidth = startWidth + delta;
+
+            if (currentHandle.minWidth) newWidth = Math.max(currentHandle.minWidth, newWidth);
+            if (currentHandle.maxWidth) newWidth = Math.min(currentHandle.maxWidth, newWidth);
+
+            currentHandle.element.style.width = newWidth + 'px';
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isResizing) {
+                isResizing = false;
+                currentHandle = null;
+                resizeHandle1.classList.remove('dragging');
+                resizeHandle2.classList.remove('dragging');
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+            }
+        });
+
+        // Report functionality - display in central block
+        const reportBtn = document.getElementById('reportBtn');
+
+        const reportContent = `
+            <div class="report-view">
+                <div class="report-header">
+                    <button class="back-btn" id="backBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M19 12H5M12 19l-7-7 7-7"/>
+                        </svg>
+                        Voltar
+                    </button>
+                </div>
+                <div class="report-inner">
+                    <h1>Relatório Comparativo: Portais Institucionais das 27 Capitais Brasileiras</h1>
+                    <h2>Resumo da Análise</h2>
+                    <p>A referida análise processou a primeira dobra estrutural (via screenshots desktop) dos portais oficiais de todas as 27 capitais do Brasil, gerando 27 esqueletos documentais individuais.</p>
+                    <div class="highlight">
+                        <p style="margin:0">A principal constatação é a grande <strong>bifurcação de filosofia de design</strong> no cenário governamental brasileiro moderno: a divisão entre sites desenhados para a <strong>Imprensa/Marketing Político (Press-Centric)</strong> e os sites desenhados para o <strong>Autoatendimento do Cidadão (Citizen-Centric/Service-First)</strong>.</p>
+                    </div>
+                    
+                    <h3>1. Padrões de Interface Mais Comuns</h3>
+                    <p>De forma geral, a estrutura de um portal governamental de capital consolidou-se no seguinte template mental:</p>
+                    <ul>
+                        <li><strong>A Barra de Acessibilidade/Transparência:</strong> 95% das capitais adotou um "Top Header" muito fino, em cor sólida constante, contendo ferramentas de acessibilidade (Alto contraste, VLibras) e acesso ao Portal da Transparência/Diário Oficial.</li>
+                        <li><strong>O Menu de Perfil de Usuário:</strong> Muitos migraram menus genéricos para menus orientados a <em>personas</em>, agrupando serviços sob os grandes guarda-chuvas estruturais: "Cidadão", "Empresa", "Servidor" e "Turista".</li>
+                        <li><strong>O Hero Banner Dividido:</strong> A grande maioria dos layouts utiliza a foto do prefeito/obras de um lado (banner rotativo) e botões fixos de utilidade pública do outro lado.</li>
+                    </ul>
+                    
+                    <h3>2. Diferenciais e Quebras de Padrão (Inovações)</h3>
+            <p>Foi possível observar capitais que quebraram o molde tradicional governamental para testar padrões mais arrojados, muitas vezes bebendo da fonte do e-commerce ou painéis web 2.0:</p>
+            <ul>
+                <li><strong>A "Busca Google" Frontal de Florianópolis (SC):</strong> Rompeu com o padrão de menus intermináveis colocando uma barra de busca <em>Search</em> colossal bem no meio da tela como ação primária da página, focando totalmente em resolver o problema imediato com linguagem natural.</li>
+                <li><strong>O "Dashboard" de Serviços do Rio de Janeiro (RJ):</strong> Eliminou as notícias da primeira dobra quase inteiramente para apresentar um grid massivo de 24 botões estilo "app mobile". Focou em transformar a home em um painel do usuário ("O que eu preciso?").</li>
+                <li><strong>A Abordagem "Market-Branded" de São Paulo (SP):</strong> Extrapolou o conceito de <em>ícones utilitários</em> (um lixo, um ônibus) substituindo-os por verdadeiras <strong>logomarcas de campanhas</strong> (Domingão Tarifa Zero, Faixa Azul). Deu aos serviços da cidade cara de "produtos de marca".</li>
+                <li><strong>A Matriz de Siglas (O Extremo) de Salvador (BA) e Teresina (PI):</strong> Uma abordagem bastante <em>hardcore</em> para a navegação, expondo um muro com mais de 25 bolhas/caixas de logotipos e siglas indecifráveis para a maioria (ex: SEMDEC, SEMGE, SEMUR). Obriga o usuário a compreender a densa árvore do organograma político da cidade.</li>
+                <li><strong>O Card Climático Integrado de São Luís (MA):</strong> Uma excelente inserção da previsão do tempo de 5 dias lindamente desenhada e mesclada na interface para uma cidade muito dependente do turismo litorâneo.</li>
+            </ul>
+            
+            <h3>3. Classificação Analítica (Ranking Estrutural)</h3>
+            <p>Separamos os sites pelo peso espacial em pixels que eles dão para suas respectivas estruturas na primeira/segunda dobra principal.</p>
+            
+            <h3 style="color:#2ecc71">🏆 Grupo 1: Foco em Autoatendimento (Citizen-Centric)</h3>
+            <p>O <em>Citizen-Centric</em> entende que 90% dos acessos diários ao portal são de pessoas com problemas práticos (pagar multas, tirar nota fiscal, IPTU, agendamento de saúde). Estas capitais esconderam a política/notícias e criaram <strong>Painéis Utilitários</strong> formidáveis em cima:</p>
+            <ul>
+                <li>Curitiba (PR)</li>
+                <li>Rio de Janeiro (RJ)</li>
+                <li>Florianópolis (SC)</li>
+                <li>Maceió (AL) <em>(Abordagem "Maceió é Massa" e app friendly)</em></li>
+                <li>Porto Alegre (RS) <em>(Com a carta digital 156 fortemente integrada)</em></li>
+                <li>Vitória (ES)</li>
+            </ul>
+            
+            <h3 style="color:#3498db">📰 Grupo 2: Foco Institucional e Jornalístico (Press-Centric / Marketing)</h3>
+            <p>Cidades que abrem o site com Carrosséis colossais de fotos de inaugurações, notícias da prefeitura, ou com o foco prioritário no "feed de jornal". O cidadão precisa "rolar a página para baixo" (abdicando do premium space Above the Fold) para encontrar o botão de multas/IPTU. A maioria das capitais reside hoje num espectro híbrido com tendência ao jornalístico. Exemplos fortes desta categoria:</p>
+            <ul>
+                <li>Goiânia (GO)</li>
+                <li>Manaus (AM)</li>
+                <li>Boa Vista (RR)</li>
+                <li>São Paulo (SP) <em>(Híbrido, mas com fortíssimo peso em painéis de resultados e marketing político frontal)</em></li>
+                <li>Macapá (AP)</li>
+            </ul>
+            
+            <h3 style="color:#9b59b6">🏛️ Grupo 3: Arquitetura Orientada à Estrutura Pública (Organograma-Centric)</h3>
+            <p>Estes são sites que, em vez de se guiarem pelas necessidades do usuário ou do jornalismo, refletem o organograma físico dos prédios públicos. Eles jogam diretórios de Secretarias e Autarquias inteiros na Home.</p>
+            <ul>
+                <li>Salvador (BA)</li>
+                <li>Teresina (PI)</li>
+                <li>Belém (PA)</li>
+                <li>Campo Grande (MS)</li>
+            </ul>
+            
+            <hr>
+            <h3>Conclusão e Insights para Futuros Projetos (Ex: Manaus)</h3>
+            <p>Para a reestruturação de portais como o exigido em <em>Manaus.am.gov.br</em>, o estudo das capitais prova que a jornada <strong>Citizen-Centric</strong> (liderada visualmente por cidades como Rio, Florianópolis e Curitiba) rende os melhores frutos em UX.</p>
+            <div class="highlight">
+                <p style="margin:0"><strong>O caminho para modernizar o portal de qualquer capital hoje passa por entender a jornada do cidadão e ter uma visão mais crítica em relação a organogramas, siglas e atos oficiais, valorizando:</strong></p>
+                <ul style="margin:12px 0 0">
+                    <li><strong>A)</strong> Uma barra de busca semântica forte</li>
+                    <li><strong>B)</strong> Organização por "Cidadão/Empresa/Turista" ao invés de "Secretaria de Saúde/Infraestrutura/Finanças"</li>
+                </ul>
+                <p style="margin:12px 0 0">O usuário final busca serviços, informações ou pagar uma dívida; não mapear o organograma público municipal.</p>
+            </div>
+                </div>
+            </div>
+        `;
+
+        let showingReport = false;
+        let emptyStateContent = '';
+
+        reportBtn.addEventListener('click', () => {
+            if (!showingReport) {
+                emptyStateContent = screenshotContainer.innerHTML;
+                showingReport = true;
+                screenshotContainer.innerHTML = reportContent;
+                screenshotTitle.textContent = 'Relatório Comparativo';
+                siteUrl.style.display = 'none';
+                imageDimensions.textContent = '';
+
+                document.getElementById('backBtn').addEventListener('click', () => {
+                    showingReport = false;
+                    screenshotContainer.innerHTML = emptyStateContent;
+                    screenshotTitle.textContent = 'Selecione uma capital';
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>
